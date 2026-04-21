@@ -1,0 +1,94 @@
+﻿@page "/pedidos"
+@inject HttpClient Http
+
+<div class="card shadow p-4">
+
+    <h3 class="mb-3">Pedidos</h3>
+
+    <button class="btn btn-dark mb-3" @onclick="Carregar">
+         Atualizar pedidos
+    </button>
+
+    @if (carregando)
+    {
+        <p> Carregando...</p>
+    }
+    else if (!string.IsNullOrEmpty(erro))
+    {
+        <div class="alert alert-danger">@erro</div>
+    }
+    else if (pedidos.Count == 0)
+    {
+        <div class="alert alert-warning">Nenhum pedido ainda</div>
+    }
+    else
+    {
+        <div class="row">
+
+            @foreach (var p in pedidos)
+            {
+                <div class="col-md-4 mb-3">
+
+                    <div class="card border-0 shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="fw-bold">@p.Sanduiche</h5>
+
+                            <p class="text-muted mb-1">
+                                Total final:
+                            </p>
+
+                            <h4 class="text-success">
+                                R$ @p.Total
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+    List<PedidoModel> pedidos = new();
+    bool carregando = false;
+    string erro = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Carregar();
+    }
+
+    async Task Carregar()
+    {
+        try
+        {
+            carregando = true;
+            erro = "";
+
+            pedidos = await Http.GetFromJsonAsync<List<PedidoModel>>(
+                "http://localhost:5195/api/pedidos"
+            ) ?? new();
+        }
+        catch
+        {
+            erro = "Erro ao conectar com a API";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    public class PedidoModel
+    {
+        public string Sanduiche { get; set; } = "";
+        public decimal Total { get; set; }
+    }
+}
